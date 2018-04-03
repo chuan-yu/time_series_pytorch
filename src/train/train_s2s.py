@@ -4,7 +4,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy as np
 
-use_cuda = torch.cuda.is_available()
+use_cuda = False
 
 def train(input_batches, target_batches, decoder_feature_batches, encoder, decoder, encoder_optimizer,
           decoder_optimizer):

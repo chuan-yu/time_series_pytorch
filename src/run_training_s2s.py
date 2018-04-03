@@ -1,17 +1,18 @@
 from models.seq2seq import EncoderRNN, DecoderRNN
-from train.train import train, evaluate
+from train.train_s2s import train, evaluate
 import torch
 import reader
 from torch import optim
 import numpy as np
+from matplotlib import pyplot as plt
 
-use_cuda = torch.cuda.is_available()
+use_cuda = False
 
 input_size = 3
 output_size = 1
 hidden_size = 200
 n_layers = 1
-lr = 0.0005
+lr = 0.001
 batch_size = 32
 n_epochs = 1000
 input_seq_len = 50
@@ -62,20 +63,27 @@ for epoch in range(n_epochs):
         train_loss = train(input_batches, target_batches, decoder_feature_batches,
                      encoder, decoder, encoder_optimizer, decoder_optimizer)
 
-    n_val_batches = x_val.shape[0]
+    n_val_batches = x_test.shape[0]
     val_loss_total = 0
     decoder_outputs = np.zeros_like(targets_val, dtype=np.float32)
     for i in range(n_val_batches):
-        input_batches = x_val[i]
-        target_batches = targets_val[i]
-        decoder_feature_batches = features_val[i]
+        input_batches = x_test[i]
+        target_batches = targets_test[i]
+        decoder_feature_batches = features_test[i]
         output = evaluate(input_batches, target_batches, decoder_feature_batches, encoder, decoder)
         decoder_outputs[i] = output
         # val_loss_total += val_loss
 
     # val_loss_mean = val_loss_total / n_val_batches
-    val_loss_mean = np.mean(np.square(decoder_outputs - targets_val))
+
+    val_loss_mean = ((decoder_outputs.flatten() - targets_test.flatten()) ** 2).mean()
 
     print("epoch %i/%i" % (epoch+1, n_epochs))
     print("training loss is %f, validation loss is %f" % (train_loss, val_loss_mean))
+
+    # if epoch % 10 == 0:
+    #     plt.plot(decoder_outputs.flatten())
+    #     plt.plot(targets_test.flatten())
+    #     plt.show()
+
 
