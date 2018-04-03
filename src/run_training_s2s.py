@@ -21,11 +21,6 @@ output_seq_len = 10
 # Load data
 data_path = "../data/count_by_hour_with_header.csv"
 data_scaled = reader.get_scaled_mrt_data(data_path, [0], datetime_features=True, holidays=None)
-
-n = data_scaled.shape[0]
-x_pretrain, y_pretrain = reader.get_pretrain_data(data_scaled[0:round(0.6 * n)],
-                                                  3, input_seq_len)
-
 train_data, val_data, test_data = reader.produce_seq2seq_data(data_scaled, batch_size, input_seq_len,
                                                               output_seq_len, time_major=True, y_has_features=True)
 

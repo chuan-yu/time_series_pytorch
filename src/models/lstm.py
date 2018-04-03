@@ -5,23 +5,22 @@ import torch.nn.functional as F
 import numpy as np
 
 class LSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, n_layers):
+    def __init__(self, input_size, hidden_size, output_size, n_layers):
         super(LSTM, self).__init__()
 
         self.input_size = input_size
-        self.batch_size = input_size.shape[1]
         self.hidden_size = hidden_size
         self.n_layers = n_layers
         self.lstm = nn.LSTM(input_size, hidden_size, n_layers)
-        self.linear = nn.Linear(hidden_size, 1, bias=True)
-        self.hidden = self.init_hidden()
+        self.linear = nn.Linear(hidden_size, output_size, bias=True)
+        self.hidden = None
 
-    def init_hidden(self):
-        return (Variable(torch.zeros(self.n_layers, self.batch_size, self.hidden_size)),
-                Variable(torch.zeros(self.n_layers, self.batch_size, self.hidden_size)))
+    def init_hidden(self, batch_size):
+        return (Variable(torch.zeros(self.n_layers, batch_size, self.hidden_size)),
+                Variable(torch.zeros(self.n_layers, batch_size, self.hidden_size)))
 
-    def forward(self, input_seqs, hidden=None):
-        lstm_outputs, lstm_hiddens = self.lstm(input, self.hidden)
+    def forward(self, input_seqs):
+        lstm_outputs, lstm_hiddens = self.lstm(input_seqs)
         outputs = self.linear(lstm_outputs)
         return outputs
 

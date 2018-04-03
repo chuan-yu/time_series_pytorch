@@ -9,7 +9,6 @@ def train(input_batches, target_batches, lstm, optimizer, use_cuda=False):
     target_batches = torch.from_numpy(target_batches)
 
     optimizer.zero_grad()
-    loss = nn.NLLLoss()
 
     input_length = input_batches.shape[0]
     batch_size = input_batches.shape[1]
@@ -17,9 +16,26 @@ def train(input_batches, target_batches, lstm, optimizer, use_cuda=False):
     input_batches = Variable(input_batches, requires_grad=False)
     target_batches = Variable(target_batches, requires_grad=False)
 
+
+
     if use_cuda:
         input_batches = input_batches.cuda()
         target_batches = target_batches.cuda()
+
+    prediction_batches = lstm(input_batches)
+
+    criterion = nn.MSELoss()
+
+    loss = criterion(prediction_batches.transpose(0, 1).contiguous(),
+                   target_batches.transpose(0, 1).contiguous())
+
+    loss.backward()
+    optimizer.step()
+
+    return loss.data[0]
+
+
+
 
 
 
