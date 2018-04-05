@@ -1,5 +1,6 @@
+import os.path
 from models.lstm import LSTM
-from train.train_lstm import train, evaluate
+from train.train_lstm import train, evaluate, predict_batches
 import reader
 import torch
 from torch import optim
@@ -7,14 +8,15 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 use_cuda = False
+checkpoint_file = "../checkpoints/simple_lstm/model.pt"
 
 input_size = 3
 output_size = 1
 hidden_size = 200
 n_layers = 1
-lr = 0.001
+lr = 0.0001
 batch_size = 32
-n_epochs = 1000
+n_epochs = 500
 input_seq_len = 10
 output_seq_len = 1
 
@@ -56,24 +58,39 @@ y_test = y[num_train + num_val:]
 
 
 lstm = LSTM(input_size, hidden_size, output_size, n_layers)
+
+if os.path.isfile(checkpoint_file):
+    print("Loading checkpoint...")
+    lstm.load_state_dict(torch.load(checkpoint_file))
+
 if use_cuda:
     lstm.cuda()
 
 lstm.hidden = lstm.init_hidden(1)
 
-optimizer = optim.Adam(lstm.parameters(), lr=lr)
+predictions = predict_batches(x_val, lstm, use_cuda=use_cuda)
+plt.plot(predictions.numpy().flatten())
+plt.plot(y_val.numpy().flatten())
+plt.show()
 
-for epoch in range(n_epochs):
-    n_batches = x_train.shape[0]
-    train_loss = 0
-    for i in range(n_batches):
-        input_batches = x_train[i]
-        target_batches = y_train[i]
-        train_loss = train(input_batches, target_batches, lstm, optimizer, use_cuda)
-
-
-    epoch_train_loss = evaluate(x_train, y_train, lstm)
-    epoch_val_loss = evaluate(x_val, y_val, lstm)
-
-    print("epoch %i/%i" % (epoch + 1, n_epochs))
-    print("traing loss is %f, validation loss is %f" % (epoch_train_loss, epoch_val_loss))
+# optimizer = optim.Adam(lstm.parameters(), lr=lr)
+#
+# best_val_loss = 1000
+# for epoch in range(n_epochs):
+#     n_batches = x_train.shape[0]
+#     for i in range(n_batches):
+#         input_batches = x_train[i]
+#         target_batches = y_train[i]
+#         train_loss = train(input_batches, target_batches, lstm, optimizer, use_cuda)
+#
+#
+#     epoch_train_loss = evaluate(x_train, y_train, lstm)
+#     epoch_val_loss = evaluate(x_val, y_val, lstm)
+#
+#     print("epoch %i/%i" % (epoch + 1, n_epochs))
+#     print("traing loss is %f, validation loss is %f" % (epoch_train_loss, epoch_val_loss))
+#
+#     if epoch_val_loss < best_val_loss:
+#         print("Saving the model...")
+#         best_val_loss = epoch_val_loss
+#         torch.save(lstm.state_dict(), checkpoint_file)
