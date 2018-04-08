@@ -15,10 +15,8 @@ def generate_sin_signal(x, noisy=False):
 
 def _read_raw_mrt_data(data_path=None):
     '''Read data from a csv file.
-
     :param data_path: the path of data file.
     :return: pandas data frame of size [time_steps, num_stations].
-
     '''
     data = pd.read_csv(data_path, index_col=0, dtype=np.float32)
     data.reset_index(drop=True, inplace=True)
@@ -43,9 +41,7 @@ def _read_raw_bus_data(stops, data_path=None):
 
 def _scale(data):
     '''Rescale the data by column to the range between 0 and 1.
-
     For each column, X = (X - X.min()) / (X.max() - X.min())
-
     :param data: numpy 2-d array
     :return: numpy 2-d array
     '''
@@ -60,7 +56,6 @@ def _scale(data):
 
 def get_scaled_mrt_data(data_path=None, stations_codes=None, datetime_features=False, holidays=None):
     ''' Get scaled mrt data
-
     :param stations_codes: a list of selected station codes. If None, return data for all stations
     :param data_path: file path of the data
     :return: numpy array of size [time_steps, num_stations]
@@ -77,16 +72,16 @@ def get_scaled_mrt_data(data_path=None, stations_codes=None, datetime_features=F
         day_week = np.array(index.dayofweek, dtype=np.float32)
         raw_data['hour'] = hours
         raw_data['day_of_week'] = day_week
-        # raw_data['dt'] = index.date
-        # raw_data['is_workday'] = raw_data['day_of_week'] // 5 == 0
+        raw_data['dt'] = index.date
+        raw_data['is_workday'] = raw_data['day_of_week'] // 5 == 0
         if holidays is not None:
             holidays = [datetime.strptime(h, '%Y-%m-%d') for h in holidays]
             for h in holidays:
                 date = h.date()
                 raw_data.ix[(raw_data['dt']==date), 'is_workday'] = False
 
-        # raw_data['is_workday'] = raw_data['is_workday'].astype(int)
-        # raw_data.drop(['dt'], axis=1, inplace=True)
+        raw_data['is_workday'] = raw_data['is_workday'].astype(int)
+        raw_data.drop(['dt'], axis=1, inplace=True)
 
     data = raw_data.as_matrix(columns=None)
     data = _scale(data)
@@ -122,7 +117,6 @@ def get_scaled_bus_data(stops, data_path=None, resample_freq=None, datetime_feat
 def mrt_simple_lstm_data(data, batch_size, truncated_backpro_len,
                          train_ratio=0.6, val_ratio=0.2):
     '''Produce the training, validation and test set
-
     :param data: time series data of shape [time_steps, feature_len]
     :param batch_size: training data batch size
     :param truncated_backpro_len: the number of time steps with which backpropogation through time is done. Also equal to
@@ -183,9 +177,8 @@ def mrt_simple_lstm_data(data, batch_size, truncated_backpro_len,
 
 def produce_seq2seq_data(data, batch_size, input_seq_len, output_seq_len,
                          time_major=False, y_has_features=False,
-                         train_ratio=0.6, val_ratio=0.2):
+                         train_ratio=0.7, val_ratio=0.2):
     ''' Produce seq2seq data
-
     :param data: time series data of shape [time_steps, feature_len]
     :param batch_size: training data batch size
     :param input_seq_len: the input sequence length for every training sample
@@ -211,7 +204,6 @@ def produce_seq2seq_data(data, batch_size, input_seq_len, output_seq_len,
                 y_val: [num_val_batches, 1, output_seq_len, feature_len]
                 x_test: [num_test_batches, 1, input_seq_len, feature_len]
                 y_test: [num_test_batches, 1, output_seq_len, feature_len]
-
     '''
 
     total_time_steps = data.shape[0]
@@ -297,7 +289,6 @@ def _convert_to_windows(data, total_seq_len, train=True, output_seq_len=1):
         if not train:
             return [[0, 1, 2, 3, 4], [2, 3, 4, 5, 6]]
             when train is False, time windows are taken by shifting output_seq_len positions to the right
-
     :param data: input data of shape [time_steps, feature_len]
     :param total_seq_len: sequence length
     :param output_seq_len: output sequence length
@@ -330,5 +321,3 @@ def get_pretrain_data(data, batch_size, time_steps):
     y = y.reshape((-1, time_steps, batch_size, 1))
 
     return x, y
-
-

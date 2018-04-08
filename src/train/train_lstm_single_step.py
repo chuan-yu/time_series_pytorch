@@ -15,6 +15,7 @@ def train(input_batches, target_batches, lstm, optimizer, use_cuda=False):
         target_batches = target_batches.cuda()
 
     prediction_batches = lstm(input_batches)
+    prediction_batches = prediction_batches[-1]
 
     criterion = nn.MSELoss()
 
@@ -30,6 +31,7 @@ def evaluate(inputs, targets, lstm, use_cuda=False):
     n_batches = inputs.shape[0]
     total_loss = 0
     for i in range(n_batches):
+        lstm.hidden = None
         input_batch = inputs[i]
         target_batch = targets[i]
         prediction_batch = predict(input_batch, lstm, use_cuda)
@@ -71,7 +73,6 @@ def predict(input_sequences, lstm, use_cuda=False):
 
 def predict_batches(input_batches, lstm, use_cuda=False):
     n_batches = input_batches.shape[0]
-    total_loss = 0
     all_predictions = torch.zeros(n_batches, input_batches.shape[1], input_batches.shape[2], 1)
     for i in range(n_batches):
         input_batch = input_batches[i]
